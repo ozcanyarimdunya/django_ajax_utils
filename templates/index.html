@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <style>
+        .custom-file-upload {
+            border: 1px solid #ccc;
+            display: inline-block;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+    </style>
+{% endblock head %}
+
+{% block content %}
+    <p>Hello from the other side</p>
+    <form action="#" method="post">
+        {% csrf_token %}
+        <label for="input_file_1" class="custom-file-upload" id="idisi_1">
+            <input type="file" name="input_file_1" data-form-data="{{ csrf_token }}" id="input_file_1" hidden
+                   onchange="changeText_1($(this))">
+            Custom upload 1
+        </label>
+        <br>
+        {% csrf_token %}
+        <label for="input_file_2" class="custom-file-upload" id="idisi_2">
+            <input type="file" name="input_file_2" data-form-data="{{ csrf_token }}" id="input_file_2" hidden
+                   onchange="changeText_2($(this))">
+            Custom upload 2
+        </label>
+
+        <p id="progress">0%</p>
+        <input type="submit" value="Submit">
+    </form>
+{% endblock content %}
+
+{% block script %}
+    <script>
+        let changeText_1 = function (_it) {
+            let name = _it[0].files[0].name;
+            $("#idisi_1").html(name)
+        };
+
+        let changeText_2 = function (_it) {
+            let name = _it[0].files[0].name;
+            $("#idisi_2").html(name)
+        };
+
+        let input_1 = $('#input_file_1');
+        let input_2 = $('#input_file_2');
+
+
+        $(document).ready(function () {
+            $("form").on('submit', function (event) {
+                    event.preventDefault();
+
+                    let formData = new FormData();
+                    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                    formData.append("input_file_1", input_1[0].files[0]);
+                    formData.append("input_file_2", input_2[0].files[0]);
+
+                    $.ajax({
+                        xhr: function () {
+                            let xhr = new window.XMLHttpRequest();
+                            xhr.upload.addEventListener('progress', function (e) {
+                                if (e.lengthComputable) {
+                                    let per = Math.round((e.loaded / e.total) * 100);
+                                    $('#progress').text(per + "%")
+                                }
+                            });
+                            return xhr;
+                        },
+                        type: "POST",
+                        url: '#',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (data) {
+                            console.log(data.file_1+" "+data.file_2);
+                        },
+                        error: function (error) {
+                            console.log(error);
+                            console.log(error.statusText);
+                        }
+                    });
+                }
+            );
+        })
+    </script>
+{% endblock script %}
